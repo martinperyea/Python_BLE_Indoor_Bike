@@ -18,17 +18,17 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="adafruit-circuitpython-ble-cycling-speed-and-cadence",
+    name="python-ble-indoor-bike",
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
-    description="BLE Cycling Speed and Cadence Service",
+    description="BLE Indoor Bike Service",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     # The project's main homepage.
-    url="https://github.com/adafruit/Adafruit_CircuitPython_BLE_Cycling_Speed_and_Cadence",
+    url="https://github.com/martinperyea/Python_BLE_Indoor_Bike",
     # Author details
-    author="Adafruit Industries",
-    author_email="circuitpython@adafruit.com",
+    author="Martin Peryea",
+    author_email="martin.peryea@gmail.com",
     install_requires=["Adafruit-Blinka", "adafruit-circuitpython-ble"],
     # Choose your license
     license="MIT",
@@ -44,10 +44,10 @@ setup(
         "Programming Language :: Python :: 3.5",
     ],
     # What does your project relate to?
-    keywords="adafruit blinka circuitpython micropython ble_cycling_speed_and_cadence ble cycling speed cadence bicycle bike",
+    keywords="adafruit blinka circuitpython micropython ble_indoor_bike ble Indoor Bike Service",
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     # TODO: IF LIBRARY FILES ARE A PACKAGE FOLDER,
     #       CHANGE `py_modules=['...']` TO `packages=['...']`
-    py_modules=["adafruit_ble_cycling_speed_and_cadence"],
+    py_modules=["ble_indoor_bike"],
 )
