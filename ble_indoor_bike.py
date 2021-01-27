@@ -20,16 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """
-`adafruit_ble_cycling_speed_and_cadence`
+`adafruit_ble_indoor_bike`
 ================================================================================
 
-BLE Cycling Speed and Cadence Service
+BLE Indoor Bike Service
 
-
-* Author(s): Dan Halbert for Adafruit Industries
-
-The Cycling Speed and Cadence Service is specified here:
-https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Services/org.bluetooth.service.cycling_speed_and_cadence.xml
 
 Implementation Notes
 --------------------
@@ -50,15 +45,26 @@ from adafruit_ble.characteristics import Characteristic, ComplexCharacteristic
 from adafruit_ble.characteristics.int import Uint8Characteristic
 
 __version__ = "0.0.0-auto.0"
-__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BLE_Cycling_Speed_and_Cadence.git"
+__repo__ = "https://github.com/martinperyea/Python_BLE_Indoor_Bike.git"
 
-CSCMeasurementValues = namedtuple(
-    "CSCMeasurementValues",
+BikeMeasurementValues = namedtuple(
+    "BikeMeasurementValues",
     (
-        "cumulative_wheel_revolutions",
-        "last_wheel_event_time",
-        "cumulative_crank_revolutions",
-        "last_crank_event_time",
+          "Instantaneous_Speed”,
+          "Average_Speed",
+          "Instantaneous_Cadence",
+          "Average_Cadence",
+          "Total_Distance",
+          "Resistance_Level",
+          "Instantaneous_Power",
+          "Average_Power",
+          "Total_Energy",
+          "Energy_Per_Hour",
+          "Energy_Per_Minute",
+          "Heart_Rate",
+          "Metabolic_Equivalent",
+          "Elapsed_Time",
+          "Remaining_Time",
     ),
 )
 """Namedtuple for measurement values.
@@ -83,11 +89,11 @@ CSCMeasurementValues = namedtuple(
 
 For example::
 
-    wheel_revs = svc.csc_measurement_values.cumulative_wheel_revolutions
+    wheel_revs = svc.bike_measurement_values.cumulative_wheel_revolutions
 """
 
 
-class _CSCMeasurement(ComplexCharacteristic):
+class _BikeMeasurement(ComplexCharacteristic):
     """Notify-only characteristic of speed and cadence data."""
 
     uuid = StandardUUID(0x2A5B)
@@ -96,23 +102,23 @@ class _CSCMeasurement(ComplexCharacteristic):
         super().__init__(properties=Characteristic.NOTIFY)
 
     def bind(self, service):
-        """Bind to a CyclingSpeedAndCadenceService."""
+        """Bind to a IndoorBikeService."""
         bound_characteristic = super().bind(service)
         bound_characteristic.set_cccd(notify=True)
         # Use a PacketBuffer that can store one packet to receive the SCS data.
         return _bleio.PacketBuffer(bound_characteristic, buffer_size=1)
 
 
-class CyclingSpeedAndCadenceService(Service):
-    """Service for reading from a Cycling Speed and Cadence sensor."""
+class IndoorBikeService(Service):
+    """Service for reading from a Indoor Bike."""
 
-    # 0x180D is the standard HRM 16-bit, on top of standard base UUID
-    uuid = StandardUUID(0x1816)
+    # 0x2AD2 is the standard HRM 16-bit, on top of standard base UUID
+    uuid = StandardUUID(0x2AD2)
 
     # Mandatory.
-    csc_measurement = _CSCMeasurement()
+    bike_measurement = _BikeMeasurement()
 
-    csc_feature = Uint8Characteristic(
+    bike_feature = Uint8Characteristic(
         uuid=StandardUUID(0x2A5C), properties=Characteristic.READ
     )
     sensor_location = Uint8Characteristic(
@@ -150,30 +156,21 @@ class CyclingSpeedAndCadenceService(Service):
 
     @property
     def measurement_values(self):
-        """All the measurement values, returned as a CSCMeasurementValues
+        """All the measurement values, returned as a BikeMeasurementValues
         namedtuple.
 
         Return ``None`` if no packet has been read yet.
         """
-        # uint8: flags
-        #  bit 0 = 1: Wheel Revolution Data is present
-        #  bit 1 = 1: Crank Revolution Data is present
-        #
-        # The next two fields are present only if bit 0 above is 1:
-        #   uint32: Cumulative Wheel Revolutions
-        #   uint16: Last Wheel Event Time, in 1024ths of a second
-        #
-        # The next two fields are present only if bit 10 above is 1:
-        #   uint16: Cumulative Crank Revolutions
-        #   uint16: Last Crank Event Time, in 1024ths of a second
+        uint16: flags
+
         #
 
         if self._measurement_buf is None:
             self._measurement_buf = bytearray(
-                self.csc_measurement.incoming_packet_length  # pylint: disable=no-member
+                self.bike_measurement.incoming_packet_length  # pylint: disable=no-member
             )
         buf = self._measurement_buf
-        packet_length = self.csc_measurement.readinto(buf)  # pylint: disable=no-member
+        packet_length = self.bike_measurement.readinto(buf)  # pylint: disable=no-member
         if packet_length == 0:
             return None
         flags = buf[0]
@@ -193,7 +190,7 @@ class CyclingSpeedAndCadenceService(Service):
         else:
             crank_revs = crank_time = None
 
-        return CSCMeasurementValues(wheel_revs, wheel_time, crank_revs, crank_time)
+        return BikeMeasurementValues(wheel_revs, wheel_time, crank_revs, crank_time)
 
     @property
     def location(self):
